@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quote 조회</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #222; min-height: 100vh; }
+  header { background: #1A1A2E; color: #E8B86D; padding: 0 32px; height: 56px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+  header h1 { font-size: 1.1rem; letter-spacing: 2px; text-transform: uppercase; }
+  header span { font-size: 0.8rem; color: #888; }
+  .container { max-width: 860px; margin: 40px auto; padding: 0 20px; }
+  .top-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .back-btn { display: inline-flex; align-items: center; gap: 6px; color: #1A1A2E; font-size: 0.85rem; font-weight: 600; text-decoration: none; }
+  .back-btn:hover { color: #E8B86D; }
+  .card { background: #fff; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,.08); padding: 36px 40px; margin-bottom: 24px; }
+  .card-title { font-size: 0.8rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #1A1A2E; border-bottom: 2px solid #E8B86D; padding-bottom: 10px; margin-bottom: 24px; }
+  .search-row { display: flex; gap: 12px; align-items: flex-end; }
+  .search-group { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+  .search-group label { font-size: 0.72rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #666; }
+  .search-group input { border: 1.5px solid #ddd; border-radius: 5px; padding: 10px 14px; font-size: 0.9rem; outline: none; transition: border-color .2s; font-family: inherit; }
+  .search-group input:focus { border-color: #1A1A2E; }
+  .btn { padding: 10px 24px; border: none; border-radius: 5px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all .2s; }
+  .btn-primary { background: #1A1A2E; color: #E8B86D; }
+  .btn-primary:hover { background: #2a2a4e; }
+
+  /* 결과 카드 */
+  .result-card { display: none; background: #fff; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,.08); padding: 36px 40px; border-top: 3px solid #E8B86D; animation: fadeIn .2s ease; }
+  .result-card.show { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  .info-row { display: flex; flex-direction: column; gap: 6px; }
+  .info-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #999; }
+  .info-val { font-size: 0.95rem; color: #1A1A2E; font-weight: 600; padding: 10px 12px; background: #f8f8f8; border-radius: 5px; border-left: 3px solid #E8B86D; }
+
+  .not-found { text-align: center; padding: 16px; color: #c62828; font-size: 0.88rem; background: #fdecea; border-radius: 6px; border-left: 4px solid #f44336; margin-top: 16px; display: none; }
+  .not-found.show { display: block; }
+</style>
+</head>
+<body>
+<header>
+  <h1>📋 Quotation Manager</h1>
+  <span>Quote → 조회</span>
+</header>
+<div class="container">
+  <div class="top-nav">
+    <a class="back-btn" href="/">← 메인으로 돌아가기</a>
+  </div>
+
+  <!-- 검색 -->
+  <div class="card">
+    <div class="card-title">🔍 Quotation Number 검색</div>
+    <div class="search-row">
+      <div class="search-group">
+        <label>Quotation Numbers</label>
+        <input type="text" id="searchInput" placeholder="예: Q-2026-0001"
+               onkeydown="if(event.key==='Enter') search()">
+      </div>
+      <button class="btn btn-primary" onclick="search()">🔍 검색</button>
+    </div>
+    <div id="notFound" class="not-found">❌ 해당 견적 번호를 찾을 수 없습니다.</div>
+  </div>
+
+  <!-- 결과 -->
+  <div class="result-card" id="resultCard">
+    <div class="card-title">📄 견적 상세 — <span id="resultTitle" style="color:#E8B86D;"></span></div>
+    <div class="info-grid">
+      <div class="info-row">
+        <div class="info-label">Quotation Numbers</div>
+        <div class="info-val" id="v_numbers"></div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">Reference</div>
+        <div class="info-val" id="v_reference"></div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">Sales Rep</div>
+        <div class="info-val" id="v_sales_rep"></div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">Date</div>
+        <div class="info-val" id="v_date"></div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">Due Date</div>
+        <div class="info-val" id="v_due_date"></div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">Quot ID</div>
+        <div class="info-val" id="v_id"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+  const API = '/api/quotes';
+  function fmtDate(d) { return d ? String(d).substring(0,10) : '-'; }
+
+  async function search() {
+    const keyword = document.getElementById('searchInput').value.trim();
+    if (!keyword) return;
+    document.getElementById('notFound').classList.remove('show');
+    document.getElementById('resultCard').classList.remove('show');
+    try {
+      const json = await (await fetch(`${API}?numbers=${encodeURIComponent(keyword)}`)).json();
+      if (!json.success || !json.data.length) {
+        document.getElementById('notFound').classList.add('show');
+        return;
+      }
+      const r = json.data.find(r => r.Numbers === keyword) || json.data[0];
+      document.getElementById('v_numbers').textContent  = r.Numbers;
+      document.getElementById('v_reference').textContent= r.Reference || '-';
+      document.getElementById('v_sales_rep').textContent= r.Sales_Rep || '-';
+      document.getElementById('v_date').textContent     = fmtDate(r.Date);
+      document.getElementById('v_due_date').textContent = fmtDate(r.Due_date);
+      document.getElementById('v_id').textContent       = r.Quot_id;
+      document.getElementById('resultTitle').textContent = r.Numbers;
+      document.getElementById('resultCard').classList.add('show');
+      document.getElementById('resultCard').scrollIntoView({ behavior:'smooth', block:'start' });
+    } catch(e) {
+      document.getElementById('notFound').classList.add('show');
+    }
+  }
+</script>
+</body>
+</html>

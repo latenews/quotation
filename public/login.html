@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Quotation System</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #1A1A2E;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .login-wrap {
+    width: 100%;
+    max-width: 420px;
+    padding: 20px;
+  }
+  .logo {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+  .logo h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #E8B86D;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+  }
+  .logo p { font-size: 0.8rem; color: #555; margin-top: 6px; letter-spacing: 1px; }
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 40px 36px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.4);
+  }
+  .card-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 28px;
+    text-align: center;
+  }
+  .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+  .form-group label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #666;
+  }
+  .form-group input {
+    border: 1.5px solid #ddd;
+    border-radius: 6px;
+    padding: 11px 14px;
+    font-size: 0.92rem;
+    outline: none;
+    transition: border-color .2s;
+    font-family: inherit;
+  }
+  .form-group input:focus { border-color: #1A1A2E; }
+  .btn-login {
+    width: 100%;
+    background: #1A1A2E;
+    color: #E8B86D;
+    border: none;
+    border-radius: 6px;
+    padding: 13px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all .2s;
+    margin-top: 8px;
+  }
+  .btn-login:hover { background: #2a2a4e; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+  .alert {
+    padding: 10px 14px;
+    border-radius: 5px;
+    font-size: 0.82rem;
+    margin-bottom: 16px;
+    display: none;
+    text-align: center;
+  }
+  .alert.error { background: #fdecea; color: #c62828; border-left: 4px solid #f44336; display: block; }
+</style>
+</head>
+<body>
+<div class="login-wrap">
+  <div class="logo">
+    <h1>📋 Quotation</h1>
+    <p>Beulah Cosmetics Management System</p>
+  </div>
+  <div class="card">
+    <div class="card-title">로그인</div>
+    <div id="alert" class="alert"></div>
+    <form id="loginForm">
+      <div class="form-group">
+        <label>ID</label>
+        <input type="text" id="loginId" placeholder="아이디를 입력하세요" required autofocus>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPw" placeholder="비밀번호를 입력하세요" required>
+      </div>
+      <button type="submit" class="btn-login">로그인</button>
+    </form>
+  </div>
+</div>
+<script>
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id       = document.getElementById('loginId').value.trim();
+    const password = document.getElementById('loginPw').value;
+    try {
+      const json = await (await fetch('/api/login', {
+        method : 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body   : JSON.stringify({ id, password })
+      })).json();
+      if (json.success) {
+        window.location.href = '/';
+      } else {
+        const el = document.getElementById('alert');
+        el.textContent = json.message;
+        el.className = 'alert error';
+      }
+    } catch(e) {
+      const el = document.getElementById('alert');
+      el.textContent = '서버 연결 오류: ' + e.message;
+      el.className = 'alert error';
+    }
+  });
+</script>
+<script>async function logout(){await fetch("/api/logout",{method:"POST"});window.location.href="/login.html";}</script>
+</body>
+</html>

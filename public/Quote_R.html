@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quote 조회</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #222; min-height: 100vh; }
+  header { background: #1A1A2E; color: #E8B86D; padding: 0 32px; height: 56px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+  header h1 { font-size: 1.1rem; letter-spacing: 2px; text-transform: uppercase; }
+  header span { font-size: 0.8rem; color: #888; }
+  .container { max-width: 1100px; margin: 32px auto; padding: 0 20px; }
+  .top-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .back-btn { display: inline-flex; align-items: center; gap: 6px; color: #1A1A2E; font-size: 0.85rem; font-weight: 600; text-decoration: none; }
+  .back-btn:hover { color: #E8B86D; }
+  .card { background: #fff; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,.08); padding: 28px 32px; margin-bottom: 28px; }
+  .card-title { font-size: 0.8rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #1A1A2E; border-bottom: 2px solid #E8B86D; padding-bottom: 10px; margin-bottom: 22px; }
+
+  /* 날짜 필터 */
+  .filter-row { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+  .filter-group { display: flex; flex-direction: column; gap: 6px; }
+  .filter-group label { font-size: 0.72rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #666; }
+  .filter-group input { border: 1.5px solid #ddd; border-radius: 5px; padding: 9px 12px; font-size: 0.88rem; outline: none; transition: border-color .2s; font-family: inherit; }
+  .filter-group input:focus { border-color: #1A1A2E; }
+  .btn { padding: 9px 20px; border: none; border-radius: 5px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all .2s; }
+  .btn-primary { background: #1A1A2E; color: #E8B86D; }
+  .btn-primary:hover { background: #2a2a4e; }
+  .btn-reset { background: #f0f0f0; color: #555; }
+  .btn-reset:hover { background: #e0e0e0; }
+
+  /* 빠른 기간 버튼 */
+  .quick-btns { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .quick-btn { padding: 5px 14px; border: 1.5px solid #ddd; border-radius: 20px; font-size: 0.75rem; font-weight: 600; cursor: pointer; background: #fff; color: #555; transition: all .2s; }
+  .quick-btn:hover { border-color: #1A1A2E; color: #1A1A2E; }
+  .quick-btn.active { background: #1A1A2E; color: #E8B86D; border-color: #1A1A2E; }
+
+  /* 결과 요약 */
+  .result-summary { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .result-count { font-size: 0.82rem; color: #888; }
+  .result-count strong { color: #1A1A2E; font-size: 1rem; }
+
+  /* 테이블 */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  thead tr { background: #1A1A2E; color: #fff; }
+  thead th { padding: 12px 14px; text-align: left; font-size: 0.75rem; letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid #f0f0f0; transition: background .15s; cursor: pointer; }
+  tbody tr:hover { background: #fffbf3; }
+  tbody td { padding: 11px 14px; }
+  .badge { display: inline-block; background: #1A1A2E; color: #E8B86D; font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 3px; }
+  .empty-msg { text-align: center; padding: 48px; color: #aaa; font-size: 0.9rem; }
+
+  /* 로딩 */
+  .loading { text-align: center; padding: 32px; color: #aaa; }
+</style>
+</head>
+<body>
+<header>
+  <h1>📋 Quotation Manager</h1>
+  <span>Quote → 조회</span>
+</header>
+<div class="container">
+  <div class="top-nav">
+    <a class="back-btn" href="/">← 메인으로 돌아가기</a>
+  </div>
+
+  <!-- 날짜 필터 -->
+  <div class="card">
+    <div class="card-title">🔍 기간 조회</div>
+    <div class="filter-row">
+      <div class="filter-group">
+        <label>시작일</label>
+        <input type="date" id="fromDate">
+      </div>
+      <div class="filter-group">
+        <label>종료일</label>
+        <input type="date" id="toDate">
+      </div>
+      <button class="btn btn-primary" onclick="search()">🔍 조회</button>
+      <button class="btn btn-reset" onclick="resetFilter()">전체 보기</button>
+    </div>
+    <div class="quick-btns">
+      <button class="quick-btn" onclick="setQuick(7)">최근 7일</button>
+      <button class="quick-btn" onclick="setQuick(30)">최근 30일</button>
+      <button class="quick-btn" onclick="setQuick(90)">최근 3개월</button>
+      <button class="quick-btn" onclick="setThisMonth()">이번 달</button>
+      <button class="quick-btn" onclick="setLastMonth()">지난 달</button>
+    </div>
+  </div>
+
+  <!-- 결과 목록 -->
+  <div class="card">
+    <div class="result-summary">
+      <div class="card-title" style="border:none;padding:0;margin:0;">📄 견적 목록</div>
+      <div class="result-count">총 <strong id="totalCount">0</strong> 건</div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Quot_id</th>
+            <th>Quotation Numbers</th>
+            <th>Reference</th>
+            <th>Date</th>
+            <th>Due Date</th>
+            <th>Sales Rep</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="6" class="loading">로딩 중...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = '/api/quotes';
+
+  function getDateStr(offsetDays = 0) {
+    const d = new Date();
+    d.setDate(d.getDate() + offsetDays);
+    return d.toISOString().substring(0, 10);
+  }
+  function fmtDate(d) { return d ? String(d).substring(0, 10) : '-'; }
+
+  // 빠른 기간 설정
+  function setQuick(days) {
+    document.getElementById('fromDate').value = getDateStr(-days);
+    document.getElementById('toDate').value   = getDateStr(0);
+    document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    search();
+  }
+  function setThisMonth() {
+    const now = new Date();
+    const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0');
+    document.getElementById('fromDate').value = `${y}-${m}-01`;
+    document.getElementById('toDate').value   = getDateStr(0);
+    document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    search();
+  }
+  function setLastMonth() {
+    const now = new Date();
+    const first = new Date(now.getFullYear(), now.getMonth()-1, 1);
+    const last  = new Date(now.getFullYear(), now.getMonth(), 0);
+    document.getElementById('fromDate').value = first.toISOString().substring(0,10);
+    document.getElementById('toDate').value   = last.toISOString().substring(0,10);
+    document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    search();
+  }
+  function resetFilter() {
+    document.getElementById('fromDate').value = '';
+    document.getElementById('toDate').value   = '';
+    document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+    search();
+  }
+
+  async function search() {
+    const from = document.getElementById('fromDate').value;
+    const to   = document.getElementById('toDate').value;
+    const tbody = document.getElementById('tableBody');
+    tbody.innerHTML = '<tr><td colspan="6" class="loading">조회 중...</td></tr>';
+
+    try {
+      let url = '/api/quotes/search?';
+      if (from) url += `from=${from}&`;
+      if (to)   url += `to=${to}`;
+
+      const json = await (await fetch(url)).json();
+      document.getElementById('totalCount').textContent = json.data?.length || 0;
+
+      if (!json.success || !json.data.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">조회된 견적이 없습니다.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = json.data.map(r => `
+        <tr>
+          <td><span class="badge">${r.Quot_id}</span></td>
+          <td><strong>${r.Numbers}</strong></td>
+          <td>${r.Reference || '-'}</td>
+          <td>${fmtDate(r.Date)}</td>
+          <td>${fmtDate(r.Due_date)}</td>
+          <td>${r.Sales_Rep || '-'}</td>
+        </tr>`).join('');
+    } catch(e) {
+      tbody.innerHTML = `<tr><td colspan="6" class="empty-msg" style="color:#c62828">서버 오류: ${e.message}</td></tr>`;
+    }
+  }
+
+  // 초기 전체 로드
+  search();
+</script>
+<script>async function logout(){await fetch("/api/logout",{method:"POST"});window.location.href="/login.html";}</script>
+</body>
+</html>

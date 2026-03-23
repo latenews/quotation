@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quotation System</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; min-height: 100vh; }
+  header { background: #1A1A2E; color: #E8B86D; padding: 0 32px; height: 60px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+  header h1 { font-size: 1.2rem; letter-spacing: 3px; text-transform: uppercase; }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+  header span { font-size: 0.8rem; color: #666; }
+  .logout-btn { background: none; border: 1px solid #E8B86D; color: #E8B86D; padding: 6px 16px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; transition: all .2s; }
+  .logout-btn:hover { background: #E8B86D; color: #1A1A2E; }
+  .container { max-width: 900px; margin: 60px auto; padding: 0 20px; }
+  .section-title { font-size: 0.75rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: #999; margin-bottom: 24px; text-align: center; }
+  .main-btns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 40px; }
+  .main-btn { background: #fff; border: 2px solid #e0e0e0; border-radius: 12px; padding: 32px 20px; text-align: center; cursor: pointer; transition: all .2s; }
+  .main-btn:hover { border-color: #E8B86D; transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.1); }
+  .main-btn.active { border-color: #1A1A2E; background: #1A1A2E; }
+  .main-btn .icon { font-size: 2.4rem; margin-bottom: 12px; }
+  .main-btn .label { font-size: 1rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #1A1A2E; transition: color .2s; }
+  .main-btn.active .label { color: #E8B86D; }
+  .main-btn .desc { font-size: 0.75rem; color: #999; margin-top: 6px; }
+  .main-btn.active .desc { color: #888; }
+  .crud-panel { display: none; background: #fff; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,.08); overflow: hidden; animation: fadeIn .2s ease; }
+  .crud-panel.show { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .crud-header { background: #1A1A2E; padding: 16px 28px; display: flex; align-items: center; gap: 12px; }
+  .crud-header span { color: #E8B86D; font-size: 0.85rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+  .crud-header .sub { color: #fff; font-weight: 400; }
+
+  /* Quote: 3개 버튼 */
+  .crud-btns-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+  /* 나머지: 4개 버튼 */
+  .crud-btns-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+  .crud-btn { padding: 28px 20px; text-align: center; cursor: pointer; border: none; background: #fff; border-right: 1px solid #f0f0f0; transition: all .2s; text-decoration: none; display: block; }
+  .crud-btn:last-child { border-right: none; }
+  .crud-btn .crud-icon { font-size: 1.8rem; margin-bottom: 10px; }
+  .crud-btn .crud-label { font-size: 0.8rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
+  .crud-btn .crud-desc { font-size: 0.72rem; color: #aaa; }
+  .crud-btn.create .crud-label { color: #2e7d32; }
+  .crud-btn.read   .crud-label { color: #1565c0; }
+  .crud-btn.update .crud-label { color: #e65100; }
+  .crud-btn.delete .crud-label { color: #c62828; }
+  .crud-btn.create:hover { background: #e8f5e9; }
+  .crud-btn.read:hover   { background: #e3f2fd; }
+  .crud-btn.update:hover { background: #fff3e0; }
+  .crud-btn.delete:hover { background: #fdecea; }
+  .coming-soon { text-align: center; padding: 12px; font-size: 0.75rem; color: #ccc; border-top: 1px solid #f0f0f0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>📋 Quotation System</h1>
+  <div class="header-right">
+    <span>Harsom Cosmetics & Printing</span>
+    <button class="logout-btn" onclick="logout()">로그아웃</button>
+  </div>
+</header>
+
+<div class="container">
+  <div class="section-title">메뉴를 선택하세요</div>
+
+  <!-- 메인 버튼 3개 -->
+  <div class="main-btns">
+    <div class="main-btn" id="btn-quote"   onclick="togglePanel('quote')">
+      <div class="icon">📄</div>
+      <div class="label">Quote</div>
+      <div class="desc">견적 정보 관리</div>
+    </div>
+    <div class="main-btn" id="btn-receive" onclick="togglePanel('receive')">
+      <div class="icon">🏢</div>
+      <div class="label">Receiver</div>
+      <div class="desc">수신자 정보 관리</div>
+    </div>
+    <div class="main-btn" id="btn-items"   onclick="togglePanel('items')">
+      <div class="icon">📦</div>
+      <div class="label">Items</div>
+      <div class="desc">품목 리스트 관리</div>
+    </div>
+  </div>
+
+  <!-- Quote CRUD (Create, Read, Update/조회 — Delete 없음) -->
+  <div class="crud-panel" id="panel-quote">
+    <div class="crud-header">
+      <span>Quote</span>
+      <span class="sub">▶ 작업을 선택하세요</span>
+    </div>
+    <div class="crud-btns-3">
+      <a href="Quote_C.html" class="crud-btn create">
+        <div class="crud-icon">➕</div>
+        <div class="crud-label">등록</div>
+      </a>
+      <a href="Quote_R.html" class="crud-btn read">
+        <div class="crud-icon">🔍</div>
+        <div class="crud-label">Read</div>
+        <div class="crud-desc">견적 조회</div>
+      </a>
+      <a href="Quote_U.html" class="crud-btn update">
+        <div class="crud-icon">📋</div>
+        <div class="crud-label">조회</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Receiver CRUD -->
+  <div class="crud-panel" id="panel-receive">
+    <div class="crud-header">
+      <span>Receiver</span>
+      <span class="sub">▶ 작업을 선택하세요</span>
+    </div>
+    <div class="crud-btns-4">
+      <a href="Receive_C.html" class="crud-btn create">
+        <div class="crud-icon">➕</div>
+        <div class="crud-label">Create</div>
+        <div class="crud-desc">수신자 등록</div>
+      </a>
+      <a href="Receive_R.html" class="crud-btn read">
+        <div class="crud-icon">🔍</div>
+        <div class="crud-label">Read</div>
+        <div class="crud-desc">수신자 조회</div>
+      </a>
+      <a href="Receive_U.html" class="crud-btn update">
+        <div class="crud-icon">✏️</div>
+        <div class="crud-label">Update</div>
+        <div class="crud-desc">수신자 수정</div>
+      </a>
+      <a href="Receive_D.html" class="crud-btn delete">
+        <div class="crud-icon">🗑️</div>
+        <div class="crud-label">Delete</div>
+        <div class="crud-desc">수신자 삭제</div>
+      </a>
+    </div>
+    <div class="coming-soon">Update / Delete 페이지는 준비 중입니다</div>
+  </div>
+
+  <!-- Items CRUD -->
+  <div class="crud-panel" id="panel-items">
+    <div class="crud-header">
+      <span>Items</span>
+      <span class="sub">▶ 작업을 선택하세요</span>
+    </div>
+    <div class="crud-btns-4">
+      <a href="Items_C.html" class="crud-btn create">
+        <div class="crud-icon">➕</div>
+        <div class="crud-label">Create</div>
+        <div class="crud-desc">품목 등록</div>
+      </a>
+      <a href="Items_R.html" class="crud-btn read">
+        <div class="crud-icon">🔍</div>
+        <div class="crud-label">Read</div>
+        <div class="crud-desc">품목 조회</div>
+      </a>
+      <a href="Items_U.html" class="crud-btn update">
+        <div class="crud-icon">✏️</div>
+        <div class="crud-label">Update</div>
+        <div class="crud-desc">품목 수정</div>
+      </a>
+      <a href="Items_D.html" class="crud-btn delete">
+        <div class="crud-icon">🗑️</div>
+        <div class="crud-label">Delete</div>
+        <div class="crud-desc">품목 삭제</div>
+      </a>
+    </div>
+    <div class="coming-soon">Items CRUD 페이지는 준비 중입니다</div>
+  </div>
+
+</div>
+
+<script>
+  function togglePanel(name) {
+    ['quote','receive','items'].forEach(p => {
+      const panel  = document.getElementById('panel-' + p);
+      const btn    = document.getElementById('btn-' + p);
+      const isOpen = panel.classList.contains('show');
+      if (p === name) {
+        panel.classList.toggle('show', !isOpen);
+        btn.classList.toggle('active', !isOpen);
+      } else {
+        panel.classList.remove('show');
+        btn.classList.remove('active');
+      }
+    });
+  }
+  async function logout() {
+    await fetch('/api/logout', { method:'POST' });
+    window.location.href = '/login.html';
+  }
+</script>
+</body>
+</html>

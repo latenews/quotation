@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quote 삭제</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #222; min-height: 100vh; }
+  header { background: #1A1A2E; color: #E8B86D; padding: 0 32px; height: 56px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+  header h1 { font-size: 1.1rem; letter-spacing: 2px; text-transform: uppercase; }
+  header span { font-size: 0.8rem; color: #888; }
+  .container { max-width: 1100px; margin: 32px auto; padding: 0 20px; }
+  .top-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .back-btn { display: inline-flex; align-items: center; gap: 6px; color: #1A1A2E; font-size: 0.85rem; font-weight: 600; text-decoration: none; }
+  .back-btn:hover { color: #E8B86D; }
+  .card { background: #fff; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,.08); padding: 28px 32px; margin-bottom: 28px; }
+  .card-title { font-size: 0.8rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #1A1A2E; border-bottom: 2px solid #E8B86D; padding-bottom: 10px; margin-bottom: 22px; }
+  .filter-row { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+  .filter-group { display: flex; flex-direction: column; gap: 6px; }
+  .filter-group label { font-size: 0.72rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #666; }
+  .filter-group input { border: 1.5px solid #ddd; border-radius: 5px; padding: 9px 12px; font-size: 0.88rem; outline: none; transition: border-color .2s; font-family: inherit; }
+  .filter-group input:focus { border-color: #1A1A2E; }
+  .quick-btns { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .quick-btn { padding: 5px 14px; border: 1.5px solid #ddd; border-radius: 20px; font-size: 0.75rem; font-weight: 600; cursor: pointer; background: #fff; color: #555; transition: all .2s; }
+  .quick-btn:hover { border-color: #1A1A2E; color: #1A1A2E; }
+  .quick-btn.active { background: #1A1A2E; color: #E8B86D; border-color: #1A1A2E; }
+  .btn { padding: 9px 20px; border: none; border-radius: 5px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all .2s; }
+  .btn-primary { background: #1A1A2E; color: #E8B86D; }
+  .btn-primary:hover { background: #2a2a4e; }
+  .btn-reset { background: #f0f0f0; color: #555; }
+  .btn-reset:hover { background: #e0e0e0; }
+  .btn-danger { background: #c62828; color: #fff; padding: 10px 28px; font-size: 0.9rem; }
+  .btn-danger:hover { background: #b71c1c; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(198,40,40,.3); }
+
+  .result-summary { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .result-count { font-size: 0.82rem; color: #888; }
+  .result-count strong { color: #1A1A2E; font-size: 1rem; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  thead tr { background: #1A1A2E; color: #fff; }
+  thead th { padding: 12px 14px; text-align: left; font-size: 0.75rem; letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid #f0f0f0; transition: background .15s; cursor: pointer; }
+  tbody tr:hover { background: #fff5f5; }
+  tbody tr.selected { background: #fdecea !important; border-left: 3px solid #c62828; }
+  tbody td { padding: 11px 14px; }
+  .badge { display: inline-block; background: #1A1A2E; color: #E8B86D; font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 3px; }
+  .empty-msg { text-align: center; padding: 48px; color: #aaa; font-size: 0.9rem; }
+
+  /* 삭제 확인 패널 */
+  .delete-card { display: none; background: #fff; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,.08); padding: 28px 32px; margin-bottom: 28px; border-top: 3px solid #c62828; animation: fadeIn .2s ease; }
+  .delete-card.show { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .delete-info { background: #fdecea; border-radius: 8px; padding: 20px 24px; margin-bottom: 20px; }
+  .delete-info-row { display: flex; gap: 8px; align-items: center; padding: 5px 0; font-size: 0.88rem; }
+  .delete-info-label { font-weight: 700; color: #888; width: 140px; font-size: 0.78rem; text-transform: uppercase; letter-spacing: .5px; }
+  .delete-info-val { color: #222; font-weight: 600; }
+  .delete-warning { display: flex; align-items: center; gap: 10px; background: #fff3e0; border-left: 4px solid #e65100; padding: 12px 16px; border-radius: 4px; margin-bottom: 20px; font-size: 0.85rem; color: #e65100; font-weight: 600; }
+  .btn-row { display: flex; gap: 12px; align-items: center; }
+  .alert { padding: 11px 16px; border-radius: 5px; font-size: 0.85rem; margin-bottom: 18px; display: none; }
+  .alert.success { background: #e8f5e9; color: #2e7d32; border-left: 4px solid #4caf50; }
+  .alert.error   { background: #fdecea; color: #c62828; border-left: 4px solid #f44336; }
+  .alert.show    { display: block; }
+</style>
+</head>
+<body>
+<header>
+  <h1>📋 Quotation Manager</h1>
+  <span>Quote → 삭제</span>
+</header>
+<div class="container">
+  <div class="top-nav">
+    <a class="back-btn" href="/">← 메인으로 돌아가기</a>
+  </div>
+
+  <!-- 날짜 필터 -->
+  <div class="card">
+    <div class="card-title">🔍 기간 선택</div>
+    <div class="filter-row">
+      <div class="filter-group">
+        <label>시작일</label>
+        <input type="date" id="fromDate">
+      </div>
+      <div class="filter-group">
+        <label>종료일</label>
+        <input type="date" id="toDate">
+      </div>
+      <button class="btn btn-primary" onclick="search()">🔍 조회</button>
+      <button class="btn btn-reset"   onclick="resetFilter()">전체 보기</button>
+    </div>
+    <div class="quick-btns">
+      <button class="quick-btn" onclick="setQuick(7,this)">최근 7일</button>
+      <button class="quick-btn" onclick="setQuick(30,this)">최근 30일</button>
+      <button class="quick-btn" onclick="setQuick(90,this)">최근 3개월</button>
+      <button class="quick-btn" onclick="setThisMonth(this)">이번 달</button>
+      <button class="quick-btn" onclick="setLastMonth(this)">지난 달</button>
+    </div>
+  </div>
+
+  <!-- 목록 -->
+  <div class="card">
+    <div class="result-summary">
+      <div class="card-title" style="border:none;padding:0;margin:0;">
+        📄 견적 목록
+        <span style="font-size:0.75rem;color:#aaa;font-weight:400;">(삭제할 행을 클릭하세요)</span>
+      </div>
+      <div class="result-count">총 <strong id="totalCount">0</strong> 건</div>
+    </div>
+    <div id="alert" class="alert"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Quot_id</th>
+            <th>Quotation Numbers</th>
+            <th>Reference</th>
+            <th>Date</th>
+            <th>Due Date</th>
+            <th>Sales Rep</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="6" class="empty-msg">조회 버튼을 눌러주세요</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 삭제 확인 패널 -->
+  <div class="delete-card" id="deleteCard">
+    <div class="card-title" style="color:#c62828; border-color:#c62828;">🗑️ 삭제 확인 — <span id="deleteTitle" style="color:#c62828;"></span></div>
+    <div class="delete-info">
+      <div class="delete-info-row"><span class="delete-info-label">Quot ID</span><span class="delete-info-val" id="d_id"></span></div>
+      <div class="delete-info-row"><span class="delete-info-label">Quotation Numbers</span><span class="delete-info-val" id="d_numbers"></span></div>
+      <div class="delete-info-row"><span class="delete-info-label">Reference</span><span class="delete-info-val" id="d_reference"></span></div>
+      <div class="delete-info-row"><span class="delete-info-label">Date</span><span class="delete-info-val" id="d_date"></span></div>
+      <div class="delete-info-row"><span class="delete-info-label">Due Date</span><span class="delete-info-val" id="d_due"></span></div>
+      <div class="delete-info-row"><span class="delete-info-label">Sales Rep</span><span class="delete-info-val" id="d_rep"></span></div>
+    </div>
+    <div class="delete-warning">⚠️ 삭제된 데이터는 복구할 수 없습니다. 정말 삭제하시겠습니까?</div>
+    <div class="btn-row">
+      <button class="btn btn-danger" onclick="confirmDelete()">🗑️ 삭제 확인</button>
+      <button class="btn btn-reset"  onclick="closeDelete()">✕ 취소</button>
+    </div>
+  </div>
+
+</div>
+<script>
+  const API = '/api/quotes';
+  let selectedId = null;
+
+  function getDateStr(offsetDays=0) {
+    const d = new Date(); d.setDate(d.getDate()+offsetDays);
+    return d.toISOString().substring(0,10);
+  }
+  function fmtDate(d) { return d ? String(d).substring(0,10) : '-'; }
+
+  function setQuick(days, el) {
+    document.getElementById('fromDate').value = getDateStr(-days);
+    document.getElementById('toDate').value   = getDateStr(0);
+    document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active'); search();
+  }
+  function setThisMonth(el) {
+    const now = new Date();
+    const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0');
+    document.getElementById('fromDate').value = `${y}-${m}-01`;
+    document.getElementById('toDate').value   = getDateStr(0);
+    document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active'); search();
+  }
+  function setLastMonth(el) {
+    const now = new Date();
+    const first = new Date(now.getFullYear(), now.getMonth()-1, 1);
+    const last  = new Date(now.getFullYear(), now.getMonth(), 0);
+    document.getElementById('fromDate').value = first.toISOString().substring(0,10);
+    document.getElementById('toDate').value   = last.toISOString().substring(0,10);
+    document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active'); search();
+  }
+  function resetFilter() {
+    document.getElementById('fromDate').value = '';
+    document.getElementById('toDate').value   = '';
+    document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+    search();
+  }
+
+  async function search() {
+    const from  = document.getElementById('fromDate').value;
+    const to    = document.getElementById('toDate').value;
+    const tbody = document.getElementById('tableBody');
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">조회 중...</td></tr>';
+    closeDelete();
+    try {
+      let url = '/api/quotes/search?';
+      if (from) url += `from=${from}&`;
+      if (to)   url += `to=${to}`;
+      const json = await (await fetch(url)).json();
+      document.getElementById('totalCount').textContent = json.data?.length || 0;
+      if (!json.success || !json.data.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">조회된 견적이 없습니다.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = json.data.map(r => `
+        <tr onclick="selectRow(this, ${r.Quot_id}, '${r.Numbers}', '${r.Reference||'-'}', '${fmtDate(r.Date)}', '${fmtDate(r.Due_date)}', '${r.Sales_Rep||'-'}')" data-id="${r.Quot_id}">
+          <td><span class="badge">${r.Quot_id}</span></td>
+          <td><strong>${r.Numbers}</strong></td>
+          <td>${r.Reference || '-'}</td>
+          <td>${fmtDate(r.Date)}</td>
+          <td>${fmtDate(r.Due_date)}</td>
+          <td>${r.Sales_Rep || '-'}</td>
+        </tr>`).join('');
+    } catch(e) {
+      tbody.innerHTML = `<tr><td colspan="6" class="empty-msg" style="color:#c62828">서버 오류: ${e.message}</td></tr>`;
+    }
+  }
+
+  function selectRow(tr, id, numbers, reference, date, due, rep) {
+    document.querySelectorAll('#tableBody tr').forEach(r => r.classList.remove('selected'));
+    tr.classList.add('selected');
+    selectedId = id;
+    document.getElementById('d_id').textContent        = id;
+    document.getElementById('d_numbers').textContent   = numbers;
+    document.getElementById('d_reference').textContent = reference;
+    document.getElementById('d_date').textContent      = date;
+    document.getElementById('d_due').textContent       = due;
+    document.getElementById('d_rep').textContent       = rep;
+    document.getElementById('deleteTitle').textContent = numbers;
+    document.getElementById('deleteCard').classList.add('show');
+    document.getElementById('deleteCard').scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+
+  function closeDelete() {
+    document.getElementById('deleteCard').classList.remove('show');
+    document.querySelectorAll('#tableBody tr').forEach(r => r.classList.remove('selected'));
+    selectedId = null;
+  }
+
+  function showAlert(msg, type='success') {
+    const el = document.getElementById('alert');
+    el.textContent = msg;
+    el.className = 'alert ' + type + ' show';
+    setTimeout(() => el.className = 'alert', 4000);
+  }
+
+  async function confirmDelete() {
+    if (!selectedId) return;
+    const numbers = document.getElementById('d_numbers').textContent;
+    try {
+      const json = await (await fetch(`${API}/${selectedId}`, { method:'DELETE' })).json();
+      if (json.success) {
+        showAlert(`🗑️ "${numbers}" 삭제 완료!`);
+        closeDelete();
+        search();
+      } else {
+        showAlert('❌ ' + json.message, 'error');
+      }
+    } catch(e) { showAlert('❌ 서버 오류: '+e.message, 'error'); }
+  }
+
+  search();
+</script>
+<script>async function logout(){await fetch("/api/logout",{method:"POST"});window.location.href="/login.html";}</script>
+</body>
+</html>

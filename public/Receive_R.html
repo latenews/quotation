@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Receiver 조회</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #222; min-height: 100vh; }
+  header { background: #1A1A2E; color: #E8B86D; padding: 0 32px; height: 56px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+  header h1 { font-size: 1.1rem; letter-spacing: 2px; text-transform: uppercase; }
+  header span { font-size: 0.8rem; color: #888; }
+  .container { max-width: 1100px; margin: 32px auto; padding: 0 20px; }
+  .top-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .back-btn { display: inline-flex; align-items: center; gap: 6px; color: #1A1A2E; font-size: 0.85rem; font-weight: 600; text-decoration: none; }
+  .back-btn:hover { color: #E8B86D; }
+  .nav-btn { display: inline-flex; align-items: center; gap: 6px; background: #1A1A2E; color: #E8B86D; padding: 8px 18px; border-radius: 5px; font-size: 0.85rem; font-weight: 600; text-decoration: none; border: none; cursor: pointer; transition: all .2s; }
+  .nav-btn:hover { background: #2a2a4e; }
+  .nav-btn:disabled { background: #ccc; color: #999; cursor: not-allowed; }
+  .card { background: #fff; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,.08); padding: 28px 32px; margin-bottom: 28px; }
+  .card-title { font-size: 0.8rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #1A1A2E; border-bottom: 2px solid #E8B86D; padding-bottom: 10px; margin-bottom: 22px; }
+  .search-row { display: flex; gap: 12px; align-items: flex-end; }
+  .search-group { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+  .search-group label { font-size: 0.72rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #666; }
+  .search-group input { border: 1.5px solid #ddd; border-radius: 5px; padding: 10px 14px; font-size: 0.9rem; outline: none; transition: border-color .2s; font-family: inherit; }
+  .search-group input:focus { border-color: #1A1A2E; }
+  .btn { padding: 10px 22px; border: none; border-radius: 5px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all .2s; }
+  .btn-primary { background: #1A1A2E; color: #E8B86D; }
+  .btn-primary:hover { background: #2a2a4e; }
+  .btn-reset { background: #f0f0f0; color: #555; }
+  .btn-reset:hover { background: #e0e0e0; }
+  .btn-success { background: #2e7d32; color: #fff; }
+  .btn-success:hover { background: #1b5e20; }
+  .btn-danger { background: #c62828; color: #fff; }
+  .btn-danger:hover { background: #b71c1c; }
+  .result-summary { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .result-count { font-size: 0.82rem; color: #888; }
+  .result-count strong { color: #1A1A2E; font-size: 1rem; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  thead tr { background: #1A1A2E; color: #fff; }
+  thead th { padding: 12px 14px; text-align: left; font-size: 0.75rem; letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid #f0f0f0; transition: background .15s; cursor: pointer; }
+  tbody tr:hover { background: #fffbf3; }
+  tbody tr.selected { background: #FFF3DC !important; border-left: 3px solid #E8B86D; }
+  tbody td { padding: 11px 14px; }
+  .badge { display: inline-block; background: #1A1A2E; color: #E8B86D; font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 3px; }
+  .badge-blue  { background: #1565c0; color: #fff; }
+  .badge-green { background: #2e7d32; color: #fff; }
+  .empty-msg { text-align: center; padding: 40px; color: #aaa; font-size: 0.9rem; }
+  .selected-hint { background: #FFF3DC; border: 1px dashed #E8B86D; border-radius: 6px; padding: 10px 16px; font-size: 0.82rem; color: #e65100; font-weight: 600; margin-bottom: 12px; display: none; }
+  .selected-hint.show { display: block; }
+
+  /* 상세 카드 */
+  .detail-card { display: none; background: #fff; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,.08); padding: 28px 32px; margin-bottom: 28px; border-top: 3px solid #E8B86D; animation: fadeIn .2s ease; }
+  .detail-card.show { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+  .info-row { display: flex; flex-direction: column; gap: 4px; }
+  .info-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #999; }
+  .info-val { font-size: 0.9rem; color: #222; font-weight: 600; }
+  .link-section { border-top: 1px solid #f0f0f0; padding-top: 20px; margin-top: 4px; }
+  .link-title { font-size: 0.8rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #1A1A2E; margin-bottom: 14px; }
+  .linked-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; margin-top: 12px; }
+  .linked-table thead tr { background: #f5f5f5; }
+  .linked-table thead th { padding: 9px 12px; text-align: left; font-size: 0.72rem; letter-spacing: .5px; text-transform: uppercase; color: #666; }
+  .linked-table tbody tr { border-bottom: 1px solid #f0f0f0; }
+  .linked-table tbody tr:hover { background: #fffbf3; }
+  .linked-table tbody td { padding: 9px 12px; }
+  .del-btn { border: none; background: #fdecea; color: #c62828; padding: 3px 10px; border-radius: 4px; font-size: 0.72rem; font-weight: 600; cursor: pointer; }
+  .del-btn:hover { background: #ffcdd2; }
+  .alert { padding: 11px 16px; border-radius: 5px; font-size: 0.85rem; margin-bottom: 16px; display: none; }
+  .alert.success { background: #e8f5e9; color: #2e7d32; border-left: 4px solid #4caf50; }
+  .alert.error   { background: #fdecea; color: #c62828; border-left: 4px solid #f44336; }
+  .alert.show    { display: block; }
+
+  /* 견적 연결 모달 */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 100; align-items: center; justify-content: center; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: #fff; border-radius: 8px; padding: 28px 32px; width: 520px; max-width: 95vw; box-shadow: 0 8px 32px rgba(0,0,0,.2); }
+  .modal-title { font-size: 0.85rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #1A1A2E; border-bottom: 2px solid #E8B86D; padding-bottom: 10px; margin-bottom: 20px; }
+  .modal-btn-row { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+  .btn-cancel { background: #f0f0f0; color: #555; }
+  .link-group { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+  .link-group label { font-size: 0.72rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #666; }
+  .link-group select { border: 1.5px solid #ddd; border-radius: 5px; padding: 10px 12px; font-size: 0.88rem; outline: none; font-family: inherit; background: #fff; width: 100%; }
+  .link-group select:focus { border-color: #1A1A2E; }
+  .receiver-info { background: #f8f8f8; border-radius: 6px; padding: 12px 16px; margin-bottom: 16px; font-size: 0.85rem; }
+  .receiver-info span { color: #1A1A2E; font-weight: 700; }
+</style>
+</head>
+<body>
+<header>
+  <h1>📋 Quotation Manager</h1>
+  <span>Receiver → 조회</span>
+</header>
+<div class="container">
+  <div class="top-nav">
+    <a class="back-btn" href="/">← 메인으로 돌아가기</a>
+    <button class="nav-btn" id="linkBtn" onclick="openLinkModal()" disabled>📄 견적 등록</button>
+  </div>
+
+  <!-- 검색 -->
+  <div class="card">
+    <div class="card-title">🔍 수신자 검색</div>
+    <div class="search-row">
+      <div class="search-group">
+        <label>Company Name</label>
+        <input type="text" id="searchInput" placeholder="회사명을 입력하세요"
+               onkeydown="if(event.key==='Enter') search()">
+      </div>
+      <button class="btn btn-primary" onclick="search()">🔍 검색</button>
+      <button class="btn btn-reset"   onclick="resetSearch()">전체 보기</button>
+    </div>
+  </div>
+
+  <!-- 수신자 목록 -->
+  <div class="card">
+    <div class="result-summary">
+      <div class="card-title" style="border:none;padding:0;margin:0;">
+        🏢 수신자 목록
+        <span style="font-size:0.75rem;color:#aaa;font-weight:400;">(행을 클릭하면 상세 정보가 표시됩니다)</span>
+      </div>
+      <div class="result-count">총 <strong id="totalCount">0</strong> 건</div>
+    </div>
+    <div id="selectedHint" class="selected-hint"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Company Name</th>
+            <th>VAT No</th>
+            <th>Address 1</th>
+            <th>Address 2</th>
+            <th>Postal Code</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="6" class="empty-msg">로딩 중...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 상세 + 연결 견적 -->
+  <div class="detail-card" id="detailCard">
+    <div class="card-title">🏢 수신자 상세 — <span id="detailTitle" style="color:#E8B86D;"></span></div>
+    <div id="alert" class="alert"></div>
+    <div class="info-grid">
+      <div class="info-row"><div class="info-label">Receiver ID</div><div class="info-val" id="d_id"></div></div>
+      <div class="info-row"><div class="info-label">Company Name</div><div class="info-val" id="d_company"></div></div>
+      <div class="info-row"><div class="info-label">VAT No</div><div class="info-val" id="d_vat"></div></div>
+      <div class="info-row"><div class="info-label">Postal Code</div><div class="info-val" id="d_postal"></div></div>
+      <div class="info-row"><div class="info-label">Address 1</div><div class="info-val" id="d_addr1"></div></div>
+      <div class="info-row"><div class="info-label">Address 2</div><div class="info-val" id="d_addr2"></div></div>
+    </div>
+
+    <!-- 연결된 견적 목록 -->
+    <div class="link-section">
+      <div class="link-title">🔗 연결된 견적 목록</div>
+      <table class="linked-table">
+        <thead>
+          <tr>
+            <th>연결 ID</th>
+            <th>Quot ID</th>
+            <th>Quotation Numbers</th>
+            <th>Date</th>
+            <th>Due Date</th>
+            <th>Sales Rep</th>
+            <th>삭제</th>
+          </tr>
+        </thead>
+        <tbody id="linkedBody">
+          <tr><td colspan="7" class="empty-msg">연결된 견적이 없습니다.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- 견적 연결 모달 -->
+<div class="modal-overlay" id="linkModal">
+  <div class="modal">
+    <div class="modal-title">📄 견적 등록 연결</div>
+    <div id="linkAlert" class="alert"></div>
+    <div class="receiver-info">수신자: <span id="linkReceiverName"></span></div>
+    <div class="link-group">
+      <label>견적 선택 <span style="color:#E8B86D">*</span></label>
+      <select id="quoteSelect">
+        <option value="">-- 견적을 선택하세요 --</option>
+      </select>
+    </div>
+    <div class="modal-btn-row">
+      <button class="btn btn-cancel" onclick="closeLinkModal()">취소</button>
+      <button class="btn btn-success" onclick="confirmLink()">✅ 확인</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const RAPI = '/api/receiver';
+  const QAPI = '/api/quotes';
+  const LAPI = '/api/quote-receiver';
+  let selectedReceiverId   = null;
+  let selectedReceiverName = '';
+
+  function fmtDate(d) { return d ? String(d).substring(0,10) : '-'; }
+
+  function showAlert(msg, type='success') {
+    const el = document.getElementById('alert');
+    el.textContent = msg;
+    el.className = 'alert ' + type + ' show';
+    setTimeout(() => el.className = 'alert', 3000);
+  }
+  function showLinkAlert(msg, type='success') {
+    const el = document.getElementById('linkAlert');
+    el.textContent = msg;
+    el.className = 'alert ' + type + ' show';
+    setTimeout(() => el.className = 'alert', 3000);
+  }
+
+  // ── 검색
+  async function search() {
+    const keyword = document.getElementById('searchInput').value.trim();
+    const tbody   = document.getElementById('tableBody');
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">검색 중...</td></tr>';
+    closeDetail();
+    try {
+      const url  = keyword ? `${RAPI}/search?name=${encodeURIComponent(keyword)}` : RAPI;
+      const json = await (await fetch(url)).json();
+      document.getElementById('totalCount').textContent = json.data?.length || 0;
+      if (!json.success || !json.data.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">검색 결과가 없습니다.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = json.data.map(r => `
+        <tr onclick="selectReceiver(this, ${r.receiver_id}, '${r.company_name.replace(/'/g,"\\'")}')">
+          <td><span class="badge">${r.receiver_id}</span></td>
+          <td><strong>${r.company_name}</strong></td>
+          <td>${r.vat_no || '-'}</td>
+          <td>${r.address1 || '-'}</td>
+          <td>${r.address2 || '-'}</td>
+          <td>${r.postal_code || '-'}</td>
+        </tr>`).join('');
+    } catch(e) {
+      tbody.innerHTML = `<tr><td colspan="6" class="empty-msg" style="color:#c62828">서버 오류: ${e.message}</td></tr>`;
+    }
+  }
+
+  function resetSearch() {
+    document.getElementById('searchInput').value = '';
+    search();
+  }
+
+  // ── 수신자 선택
+  async function selectReceiver(tr, id, name) {
+    document.querySelectorAll('#tableBody tr').forEach(r => r.classList.remove('selected'));
+    tr.classList.add('selected');
+    selectedReceiverId   = id;
+    selectedReceiverName = name;
+    document.getElementById('linkBtn').disabled = false;
+    const hint = document.getElementById('selectedHint');
+    hint.textContent = `✅ "${name}" 선택됨 — 오른쪽 상단 "📄 견적 등록" 버튼을 눌러 견적을 연결하세요.`;
+    hint.classList.add('show');
+    try {
+      const json = await (await fetch(`${RAPI}/${id}`)).json();
+      if (!json.success) return;
+      const r = json.data;
+      document.getElementById('d_id').textContent      = r.receiver_id;
+      document.getElementById('d_company').textContent = r.company_name;
+      document.getElementById('d_vat').textContent     = r.vat_no || '-';
+      document.getElementById('d_postal').textContent  = r.postal_code || '-';
+      document.getElementById('d_addr1').textContent   = r.address1 || '-';
+      document.getElementById('d_addr2').textContent   = r.address2 || '-';
+      document.getElementById('detailTitle').textContent = r.company_name;
+      document.getElementById('detailCard').classList.add('show');
+      await loadLinkedQuotes(id);
+      document.getElementById('detailCard').scrollIntoView({ behavior:'smooth', block:'start' });
+    } catch(e) { alert('오류: '+e.message); }
+  }
+
+  function closeDetail() {
+    document.getElementById('detailCard').classList.remove('show');
+    document.getElementById('selectedHint').classList.remove('show');
+    document.querySelectorAll('#tableBody tr').forEach(r => r.classList.remove('selected'));
+    selectedReceiverId = null;
+    selectedReceiverName = '';
+    document.getElementById('linkBtn').disabled = true;
+  }
+
+  // ── 연결된 견적 로드
+  async function loadLinkedQuotes(receiverId) {
+    const tbody = document.getElementById('linkedBody');
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">로딩 중...</td></tr>';
+    try {
+      const json = await (await fetch(`${LAPI}/receiver/${receiverId}`)).json();
+      if (!json.success || !json.data.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">연결된 견적이 없습니다.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = json.data.map(r => `
+        <tr>
+          <td><span class="badge badge-blue">${r.id}</span></td>
+          <td><span class="badge">${r.quote_id}</span></td>
+          <td><strong>${r.Numbers}</strong></td>
+          <td>${fmtDate(r.Date)}</td>
+          <td>${fmtDate(r.Due_date)}</td>
+          <td>${r.Sales_Rep || '-'}</td>
+          <td><button class="del-btn" onclick="unlinkQuote(${r.id})">삭제</button></td>
+        </tr>`).join('');
+    } catch(e) {
+      tbody.innerHTML = `<tr><td colspan="7" class="empty-msg" style="color:#c62828">오류: ${e.message}</td></tr>`;
+    }
+  }
+
+  // ── 견적 연결 모달 열기
+  async function openLinkModal() {
+    if (!selectedReceiverId) return;
+    document.getElementById('linkReceiverName').textContent = selectedReceiverName;
+    document.getElementById('linkAlert').className = 'alert';
+    const sel  = document.getElementById('quoteSelect');
+    const json = await (await fetch(QAPI)).json();
+    sel.innerHTML = '<option value="">-- 견적을 선택하세요 --</option>';
+    if (json.success && json.data.length) {
+      json.data.forEach(q => {
+        sel.innerHTML += `<option value="${q.Quot_id}">${q.Numbers}  (${fmtDate(q.Date)})</option>`;
+      });
+    }
+    document.getElementById('linkModal').classList.add('show');
+  }
+
+  function closeLinkModal() {
+    document.getElementById('linkModal').classList.remove('show');
+    document.getElementById('quoteSelect').value = '';
+  }
+
+  // ── 견적 연결 확인
+  async function confirmLink() {
+    const quote_id = document.getElementById('quoteSelect').value;
+    if (!quote_id) { showLinkAlert('❌ 견적을 선택해 주세요.', 'error'); return; }
+    try {
+      const json = await (await fetch(LAPI, {
+        method : 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body   : JSON.stringify({ quote_id: parseInt(quote_id), receiver_id: selectedReceiverId })
+      })).json();
+      if (json.success) {
+        closeLinkModal();
+        showAlert(`✅ "${selectedReceiverName}" 에 견적 연결 완료!`);
+        await loadLinkedQuotes(selectedReceiverId);
+      } else showLinkAlert('❌ ' + json.message, 'error');
+    } catch(e) { showLinkAlert('❌ 서버 오류: '+e.message, 'error'); }
+  }
+
+  // ── 연결 삭제
+  async function unlinkQuote(id) {
+    if (!confirm('이 견적 연결을 삭제하시겠습니까?')) return;
+    try {
+      const json = await (await fetch(`${LAPI}/${id}`, { method:'DELETE' })).json();
+      if (json.success) {
+        showAlert('🗑️ 연결 삭제 완료');
+        await loadLinkedQuotes(selectedReceiverId);
+      } else showAlert('❌ ' + json.message, 'error');
+    } catch(e) { showAlert('❌ '+e.message, 'error'); }
+  }
+
+  document.getElementById('linkModal').addEventListener('click', function(e) { if(e.target===this) closeLinkModal(); });
+
+  search();
+</script>
+<script>async function logout(){await fetch("/api/logout",{method:"POST"});window.location.href="/login.html";}</script>
+</body>
+</html>

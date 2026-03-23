@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Receiver 등록</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #222; min-height: 100vh; }
+  header { background: #1A1A2E; color: #E8B86D; padding: 0 32px; height: 56px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+  header h1 { font-size: 1.1rem; letter-spacing: 2px; text-transform: uppercase; }
+  header span { font-size: 0.8rem; color: #888; }
+  .container { max-width: 860px; margin: 40px auto; padding: 0 20px; }
+  .top-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .back-btn { display: inline-flex; align-items: center; gap: 6px; color: #1A1A2E; font-size: 0.85rem; font-weight: 600; text-decoration: none; }
+  .back-btn:hover { color: #E8B86D; }
+  .nav-btn { display: inline-flex; align-items: center; gap: 6px; background: #1A1A2E; color: #E8B86D; padding: 8px 18px; border-radius: 5px; font-size: 0.85rem; font-weight: 600; text-decoration: none; border: none; cursor: pointer; transition: all .2s; }
+  .nav-btn:hover { background: #2a2a4e; }
+  .nav-btn:disabled { background: #ccc; color: #999; cursor: not-allowed; }
+  .card { background: #fff; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,.08); padding: 36px 40px; }
+  .card-title { font-size: 0.8rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #1A1A2E; border-bottom: 2px solid #E8B86D; padding-bottom: 10px; margin-bottom: 28px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-group label { font-size: 0.72rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #666; }
+  .form-group input { border: 1.5px solid #ddd; border-radius: 5px; padding: 10px 12px; font-size: 0.88rem; outline: none; transition: border-color .2s; font-family: inherit; }
+  .form-group input:focus { border-color: #1A1A2E; }
+  .form-group input.required { border-left: 3px solid #E8B86D; }
+  .btn-row { display: flex; gap: 10px; margin-top: 28px; }
+  .btn { padding: 11px 32px; border: none; border-radius: 5px; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: all .2s; letter-spacing: .5px; }
+  .btn-primary { background: #1A1A2E; color: #E8B86D; }
+  .btn-primary:hover { background: #2a2a4e; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.15); }
+  .btn-primary:disabled { background: #ccc; color: #999; cursor: not-allowed; transform: none; }
+  .alert { padding: 12px 16px; border-radius: 5px; font-size: 0.85rem; margin-bottom: 20px; display: none; }
+  .alert.success { background: #e8f5e9; color: #2e7d32; border-left: 4px solid #4caf50; }
+  .alert.error   { background: #fdecea; color: #c62828; border-left: 4px solid #f44336; }
+  .alert.show    { display: block; }
+
+  /* 견적 연결 모달 */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 100; align-items: center; justify-content: center; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: #fff; border-radius: 8px; padding: 28px 32px; width: 520px; max-width: 95vw; box-shadow: 0 8px 32px rgba(0,0,0,.2); }
+  .modal-title { font-size: 0.85rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #1A1A2E; border-bottom: 2px solid #E8B86D; padding-bottom: 10px; margin-bottom: 20px; }
+  .modal-btn-row { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+  .btn-cancel  { background: #f0f0f0; color: #555; padding: 9px 20px; border: none; border-radius: 5px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+  .btn-cancel:hover { background: #e0e0e0; }
+  .btn-success { background: #2e7d32; color: #fff; padding: 9px 20px; border: none; border-radius: 5px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+  .btn-success:hover { background: #1b5e20; }
+  .link-group { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+  .link-group label { font-size: 0.72rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #666; }
+  .link-group select { border: 1.5px solid #ddd; border-radius: 5px; padding: 10px 12px; font-size: 0.88rem; outline: none; font-family: inherit; background: #fff; width: 100%; }
+  .link-group select:focus { border-color: #1A1A2E; }
+  .receiver-info { background: #f8f8f8; border-radius: 6px; padding: 12px 16px; margin-bottom: 16px; font-size: 0.85rem; }
+  .receiver-info span { color: #1A1A2E; font-weight: 700; }
+</style>
+</head>
+<body>
+<header>
+  <h1>📋 Quotation Manager</h1>
+  <span>Receiver → Create</span>
+</header>
+<div class="container">
+  <div class="top-nav">
+    <a class="back-btn" href="/">← 메인으로 돌아가기</a>
+    <button class="nav-btn" id="linkBtn" onclick="openLinkModal()" disabled>📄 견적 등록</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">➕ 새 수신자 등록</div>
+    <div id="alert" class="alert"></div>
+    <form id="receiverForm">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Company Name <span style="color:#E8B86D">*</span></label>
+          <input type="text" id="company_name" class="required" required>
+        </div>
+        <div class="form-group">
+          <label>VAT No</label>
+          <input type="text" id="vat_no">
+        </div>
+        <div class="form-group">
+          <label>Postal Code</label>
+          <input type="text" id="postal_code">
+        </div>
+        <div class="form-group full">
+          <label>Address 1</label>
+          <input type="text" id="address1">
+        </div>
+        <div class="form-group full">
+          <label>Address 2</label>
+          <input type="text" id="address2">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button type="submit" class="btn btn-primary" id="saveBtn">💾 저장</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 견적 연결 모달 -->
+<div class="modal-overlay" id="linkModal">
+  <div class="modal">
+    <div class="modal-title">📄 견적 등록 연결</div>
+    <div id="linkAlert" class="alert"></div>
+    <div class="receiver-info">수신자: <span id="linkReceiverName"></span></div>
+    <div class="link-group">
+      <label>견적 선택 <span style="color:#E8B86D">*</span></label>
+      <select id="quoteSelect">
+        <option value="">-- 견적을 선택하세요 --</option>
+      </select>
+    </div>
+    <div class="modal-btn-row">
+      <button class="btn-cancel" onclick="closeLinkModal()">취소</button>
+      <button class="btn-success" onclick="confirmLink()">✅ 확인</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const RAPI = '/api/receiver';
+  const QAPI = '/api/quotes';
+  const LAPI = '/api/quote-receiver';
+  let savedReceiverId   = null;
+  let savedReceiverName = '';
+
+  function showAlert(msg, type='success') {
+    const el = document.getElementById('alert');
+    el.textContent = msg;
+    el.className = 'alert ' + type + ' show';
+    if (type === 'success') setTimeout(() => el.className = 'alert', 3000);
+  }
+  function showLinkAlert(msg, type='success') {
+    const el = document.getElementById('linkAlert');
+    el.textContent = msg;
+    el.className = 'alert ' + type + ' show';
+    setTimeout(() => el.className = 'alert', 3000);
+  }
+
+  // 저장
+  document.getElementById('receiverForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const saveBtn = document.getElementById('saveBtn');
+    const body = {
+      company_name: document.getElementById('company_name').value.trim(),
+      vat_no      : document.getElementById('vat_no').value.trim(),
+      address1    : document.getElementById('address1').value.trim(),
+      address2    : document.getElementById('address2').value.trim(),
+      postal_code : document.getElementById('postal_code').value.trim()
+    };
+    saveBtn.disabled = true;
+    try {
+      const json = await (await fetch(RAPI, {
+        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+      })).json();
+      if (json.success) {
+        savedReceiverId   = json.id;
+        savedReceiverName = body.company_name;
+        showAlert(`✅ "${body.company_name}" 등록 완료! 견적을 연결하려면 "📄 견적 등록" 버튼을 누르세요.`);
+        // 필드 초기화
+        ['company_name','vat_no','address1','address2','postal_code']
+          .forEach(id => document.getElementById(id).value = '');
+        // 견적 등록 버튼 활성화
+        document.getElementById('linkBtn').disabled = false;
+      } else {
+        showAlert('❌ ' + json.message, 'error');
+      }
+    } catch(err) {
+      showAlert('❌ 서버 오류: ' + err.message, 'error');
+    } finally {
+      saveBtn.disabled = false;
+    }
+  });
+
+  // 견적 연결 모달 열기
+  async function openLinkModal() {
+    if (!savedReceiverId) return;
+    document.getElementById('linkReceiverName').textContent = savedReceiverName;
+    document.getElementById('linkAlert').className = 'alert';
+    const sel  = document.getElementById('quoteSelect');
+    const json = await (await fetch(QAPI)).json();
+    sel.innerHTML = '<option value="">-- 견적을 선택하세요 --</option>';
+    if (json.success && json.data.length) {
+      json.data.forEach(q => {
+        const date = q.Date ? String(q.Date).substring(0,10) : '';
+        sel.innerHTML += `<option value="${q.Quot_id}">${q.Numbers} (${date})</option>`;
+      });
+    }
+    document.getElementById('linkModal').classList.add('show');
+  }
+
+  function closeLinkModal() {
+    document.getElementById('linkModal').classList.remove('show');
+    document.getElementById('quoteSelect').value = '';
+  }
+
+  // 견적 연결 확인
+  async function confirmLink() {
+    const quote_id = document.getElementById('quoteSelect').value;
+    if (!quote_id) { showLinkAlert('❌ 견적을 선택해 주세요.', 'error'); return; }
+    try {
+      const json = await (await fetch(LAPI, {
+        method : 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body   : JSON.stringify({ quote_id: parseInt(quote_id), receiver_id: savedReceiverId })
+      })).json();
+      if (json.success) {
+        closeLinkModal();
+        showAlert(`✅ "${savedReceiverName}" 에 견적 연결 완료!`);
+        savedReceiverId   = null;
+        savedReceiverName = '';
+        document.getElementById('linkBtn').disabled = true;
+      } else {
+        showLinkAlert('❌ ' + json.message, 'error');
+      }
+    } catch(err) { showLinkAlert('❌ 서버 오류: ' + err.message, 'error'); }
+  }
+
+  document.getElementById('linkModal').addEventListener('click', function(e) {
+    if (e.target === this) closeLinkModal();
+  });
+</script>
+</body>
+</html>
